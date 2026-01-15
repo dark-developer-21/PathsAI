@@ -23,9 +23,9 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     print("Cargando modelo YOLO...")
-    # Puedes cambiar 'yolov8n.pt' por 'yolov8s.pt', 'yolov8m.pt', etc.
+    # Puedes cambiar 'models/yolov8n.pt' por 'yolov8s.pt', 'yolov8m.pt', etc.
     # n = nano (más rápido), s = small, m = medium, l = large, x = extra large
-    model = YOLO('yolov8n.pt')
+    model = YOLO('models/yolov8n.pt')
 
     print("Abriendo webcam...")
     # 0 es la webcam por defecto, si tienes varias prueba con 1, 2, etc.

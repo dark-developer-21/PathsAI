@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-Script para segmentar CUALQUIER COSA en tiempo real usando YOLOE
-Vocabulario abierto (1200+ categorías) con segmentación automática
-Optimizado para RTX 4070 - ~35-45 FPS
-YOLOE (2025): Lo mejor de YOLO + Vocabulario abierto sin fragmentación
+Script para segmentar objetos en tiempo real usando YOLOv8 Segmentation
+Instance segmentation de alta velocidad optimizado para GPU
+Mucho más rápido que SAM2 (~30-60 FPS vs ~1 FPS)
 """
-from ultralytics import YOLOE
+from ultralytics import YOLO
 import cv2
 import signal
 import sys
@@ -27,13 +26,14 @@ def generate_colors(n):
     np.random.seed(42)
     colors = []
     for i in range(n):
-        colors.append(tuple(np.random.randint(0, 255, 3).tolist()))
+        color = np.random.randint(0, 255, 3).tolist()
+        colors.append(tuple(color))
     return colors
 
-def apply_masks_with_labels(frame, results, alpha=0.5, show_boxes=True, show_labels=True):
+def apply_segmentation_masks(frame, results, alpha=0.5, show_boxes=True, show_labels=True):
     """
-    Aplica máscaras de segmentación con labels y bounding boxes
-    Optimizado para YOLOE con vocabulario abierto
+    Aplica máscaras de segmentación con colores y labels
+    Más customizable que el .plot() por defecto
     """
     if not results or len(results) == 0:
         return frame
@@ -52,13 +52,11 @@ def apply_masks_with_labels(frame, results, alpha=0.5, show_boxes=True, show_lab
     boxes = result.boxes.xyxy.cpu().numpy() if result.boxes is not None else None
     scores = result.boxes.conf.cpu().numpy() if result.boxes is not None else None
     classes = result.boxes.cls.cpu().numpy().astype(int) if result.boxes is not None else None
-
-    # YOLOE puede tener nombres de clase personalizados
-    class_names = result.names if hasattr(result, 'names') else {}
+    class_names = result.names
 
     # Generar colores
     num_objects = len(masks)
-    colors = generate_colors(max(len(class_names), 100))
+    colors = generate_colors(100)  # Pool de colores
 
     # Aplicar cada máscara
     for idx in range(num_objects):
@@ -71,7 +69,7 @@ def apply_masks_with_labels(frame, results, alpha=0.5, show_boxes=True, show_lab
             interpolation=cv2.INTER_NEAREST
         )
 
-        # Color para esta instancia
+        # Color para esta clase
         class_id = classes[idx] if classes is not None else idx
         color = colors[class_id % len(colors)]
 
@@ -79,53 +77,51 @@ def apply_masks_with_labels(frame, results, alpha=0.5, show_boxes=True, show_lab
         mask_bool = mask_resized > 0.5
         overlay[mask_bool] = color
 
-        # Dibujar contorno grueso
+        # Dibujar contorno
         contours, _ = cv2.findContours(
-            (mask_resized > 0.5).astype(np.uint8),
+            mask_resized.astype(np.uint8),
             cv2.RETR_EXTERNAL,
             cv2.CHAIN_APPROX_SIMPLE
         )
-        cv2.drawContours(output, contours, -1, (255, 255, 255), 3)
+        cv2.drawContours(output, contours, -1, (255, 255, 255), 2)
 
     # Mezclar overlay con frame original
-    result_frame = cv2.addWeighted(output, 1 - alpha, overlay, alpha, 0)
+    output = cv2.addWeighted(output, 1 - alpha, overlay, alpha, 0)
 
-    # Dibujar bounding boxes y labels
+    # Dibujar bounding boxes y labels si está habilitado
     if show_boxes and boxes is not None:
         for idx in range(num_objects):
             x1, y1, x2, y2 = boxes[idx].astype(int)
             class_id = classes[idx]
             score = scores[idx]
-
-            # Obtener nombre de clase
-            class_name = class_names.get(class_id, f"class_{class_id}")
+            class_name = class_names[class_id]
 
             # Color para esta clase
             color = colors[class_id % len(colors)]
 
             # Dibujar box
-            cv2.rectangle(result_frame, (x1, y1), (x2, y2), color, 2)
+            cv2.rectangle(output, (x1, y1), (x2, y2), color, 2)
 
             # Preparar label
             if show_labels:
                 label = f"{class_name} {score:.2f}"
 
                 # Fondo para el texto
-                (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
-                cv2.rectangle(result_frame, (x1, y1 - 25), (x1 + w + 10, y1), color, -1)
+                (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+                cv2.rectangle(output, (x1, y1 - 20), (x1 + w, y1), color, -1)
 
                 # Texto
                 cv2.putText(
-                    result_frame,
+                    output,
                     label,
-                    (x1 + 5, y1 - 7),
+                    (x1, y1 - 5),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
+                    0.5,
                     (255, 255, 255),
-                    2
+                    1
                 )
 
-    return result_frame
+    return output
 
 def main():
     global running
@@ -139,23 +135,25 @@ def main():
         print(f"  VRAM disponible: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
         device = 'cuda'
     else:
-        print("⚠ GPU no detectada, usando CPU (será más lento)")
+        print("⚠ GPU no detectada, usando CPU")
         device = 'cpu'
 
-    print("\nCargando modelo YOLOE-11s-seg-pf...")
+    print("\nCargando modelo YOLOv8 Segmentation...")
     try:
-        # YOLOE Prompt-Free: Vocabulario abierto sin necesidad de prompts
-        # Detecta automáticamente 1200+ categorías (LVIS + Objects365)
-        model = YOLOE('yoloe-11s-seg-pf.pt')
+        # Modelos disponibles (de más rápido a más preciso):
+        # yolov8n-seg.pt - Nano (MÁS RÁPIDO, ~60+ FPS)
+        # yolov8s-seg.pt - Small (~45-55 FPS) ⭐ RECOMENDADO RTX 4070
+        # yolov8m-seg.pt - Medium (~35-45 FPS)
+        # yolov8l-seg.pt - Large (~25-35 FPS)
+        # yolov8x-seg.pt - Extra Large (MÁS PRECISO, ~20-30 FPS)
+
+        model = YOLO('models/yolov8s-seg.pt')  # Small - Balance perfecto para RTX 4070
         model.to(device)
-        print("✓ Modelo YOLOE-11s-seg-pf cargado correctamente")
-        print("  Modo: Prompt-Free (vocabulario abierto automático)")
-        print("  Categorías: 1200+ (LVIS + Objects365)")
-        print("  Ventajas: Velocidad de YOLO + Vocabulario abierto sin fragmentación")
+        print(f"✓ Modelo YOLOv8-seg cargado en {device.upper()}")
+        print("  Clases detectables: 80 (personas, vehículos, animales, objetos, etc.)")
     except Exception as e:
         print(f"Error al cargar modelo: {e}")
-        print("El modelo se descargará automáticamente la primera vez...")
-        print("Instalando: pip install ultralytics")
+        print("Instalando dependencias: pip install ultralytics torch")
         return
 
     print("\nAbriendo webcam...")
@@ -166,6 +164,7 @@ def main():
         return
 
     # Configurar resolución (ajusta según tu preferencia)
+    # Menor resolución = más FPS
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
@@ -175,25 +174,19 @@ def main():
     print(f"  Resolución: {actual_width}x{actual_height}")
 
     # Configurar ventana
-    window_name = 'YOLOE - Vocabulario Abierto en Tiempo Real'
+    window_name = 'YOLOv8 Segmentation - Tiempo Real'
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
     print("\n" + "="*70)
-    print("YOLOE-11s-seg-pf - VOCABULARIO ABIERTO SIN FRAGMENTACIÓN")
+    print("INSTRUCCIONES:")
     print("="*70)
-    print("CARACTERÍSTICAS:")
-    print("  • Detecta CUALQUIER COSA (1200+ categorías integradas)")
-    print("  • Sin sobre-segmentación (máscaras limpias)")
-    print("  • 35-45 FPS en RTX 4070 (4x más rápido que FastSAM)")
-    print("  • No requiere prompts (automático)")
-    print("")
-    print("CONTROLES:")
-    print("  • 'c': Cambiar umbral de confianza (0.25/0.4/0.6)")
-    print("  • 'b': Mostrar/ocultar bounding boxes")
-    print("  • 'l': Mostrar/ocultar labels")
-    print("  • 'i': Cambiar tamaño de inferencia (640/800/1024)")
-    print("  • 'q' o ESC: Salir")
-    print("  • Ctrl+C: Salir de emergencia")
+    print("• Segmentación automática en tiempo real de 80 clases de objetos")
+    print("• 'q' o ESC: Salir")
+    print("• 'm': Cambiar modelo (nano/small/medium)")
+    print("• 'c': Alternar umbral de confianza (0.25/0.5/0.7)")
+    print("• 'b': Mostrar/ocultar bounding boxes")
+    print("• 'l': Mostrar/ocultar labels")
+    print("• Ctrl+C: Salir de emergencia")
     print("="*70 + "\n")
 
     try:
@@ -201,12 +194,15 @@ def main():
         fps_list = []
 
         # Configuración ajustable
+        current_model_idx = 1  # Empezamos en Small (índice 1)
+        models = ['models/yolov8n-seg.pt', 'models/yolov8s-seg.pt', 'yolov8m-seg.pt']
+        model_names = ['Nano (Rápido)', 'Small (Balanceado) ⭐', 'Medium (Preciso)']
+
         conf_threshold = 0.25  # Umbral de confianza
         show_boxes = True
         show_labels = True
-        imgsz = 640  # Tamaño de inferencia
 
-        print("Iniciando detección en tiempo real...\n")
+        print("Iniciando detección (puede tardar en el primer frame)...\n")
 
         while running:
             # Capturar frame
@@ -218,20 +214,18 @@ def main():
             # Medir tiempo de procesamiento
             start_time = time.time()
 
-            # Ejecutar YOLOE Segmentation (Prompt-Free)
+            # Ejecutar YOLO Segmentation
             results = model(
                 frame,
                 verbose=False,
-                conf=conf_threshold,
-                iou=0.7,
-                max_det=30,  # Límite razonable de detecciones
-                device=device,
-                imgsz=imgsz,
-                retina_masks=True  # Máscaras de alta calidad
+                conf=conf_threshold,  # Umbral de confianza
+                iou=0.45,            # Umbral de NMS
+                max_det=50,          # Máximo de detecciones
+                device=device
             )
 
-            # Aplicar máscaras con labels
-            display_frame = apply_masks_with_labels(
+            # Aplicar máscaras
+            display_frame = apply_segmentation_masks(
                 frame,
                 results,
                 alpha=0.4,
@@ -256,19 +250,16 @@ def main():
             # Panel de información
             info_y = 30
             cv2.putText(display_frame, f"FPS: {avg_fps:.1f}", (10, info_y),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-            cv2.putText(display_frame, f"Objetos: {num_objects}", (10, info_y + 35),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(display_frame, f"Objetos: {num_objects}", (10, info_y + 30),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-            cv2.putText(display_frame, f"Conf: {conf_threshold}", (10, info_y + 70),
+            cv2.putText(display_frame, f"Conf: {conf_threshold}", (10, info_y + 60),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
-            cv2.putText(display_frame, f"ImgSize: {imgsz}px", (10, info_y + 105),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 2)
-
-            cv2.putText(display_frame, "YOLOE Prompt-Free", (10, info_y + 140),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150, 150, 255), 1)
+            cv2.putText(display_frame, f"Modelo: {model_names[current_model_idx]}", (10, info_y + 90),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
 
             # Mostrar frame
             cv2.imshow(window_name, display_frame)
@@ -278,11 +269,19 @@ def main():
 
             if key == ord('q') or key == 27:  # q o ESC
                 break
+            elif key == ord('m'):  # Cambiar modelo
+                current_model_idx = (current_model_idx + 1) % len(models)
+                print(f"\n→ Cambiando a modelo: {model_names[current_model_idx]}")
+                print("  Cargando...")
+                model = YOLO(models[current_model_idx])
+                model.to(device)
+                fps_list = []  # Reset FPS counter
+                print("  ✓ Modelo cargado")
             elif key == ord('c'):  # Cambiar confianza
                 if conf_threshold == 0.25:
-                    conf_threshold = 0.4
-                elif conf_threshold == 0.4:
-                    conf_threshold = 0.6
+                    conf_threshold = 0.5
+                elif conf_threshold == 0.5:
+                    conf_threshold = 0.7
                 else:
                     conf_threshold = 0.25
                 print(f"→ Umbral de confianza: {conf_threshold}")
@@ -292,15 +291,6 @@ def main():
             elif key == ord('l'):  # Toggle labels
                 show_labels = not show_labels
                 print(f"→ Labels: {'ON' if show_labels else 'OFF'}")
-            elif key == ord('i'):  # Cambiar tamaño de inferencia
-                if imgsz == 640:
-                    imgsz = 800
-                elif imgsz == 800:
-                    imgsz = 1024
-                else:
-                    imgsz = 640
-                print(f"→ Tamaño de inferencia: {imgsz}px (afecta velocidad/precisión)")
-                fps_list = []  # Reset FPS counter
 
             frame_count += 1
 
@@ -331,7 +321,7 @@ def main():
             print(f"FPS promedio: {np.mean(fps_list):.1f}")
             print(f"FPS máximo: {np.max(fps_list):.1f}")
             print(f"FPS mínimo: {np.min(fps_list):.1f}")
-            print(f"Modelo: YOLOE-11s-seg-pf (Vocabulario Abierto)")
+            print(f"Modelo usado: {model_names[current_model_idx]}")
             print("="*70)
 
 if __name__ == "__main__":

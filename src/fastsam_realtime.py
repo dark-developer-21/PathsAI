@@ -166,7 +166,7 @@ def main():
     print("\nCargando modelo FastSAM...")
     try:
         # FastSAM-s.pt (más rápido ~15-20 FPS) o FastSAM-x.pt (más preciso ~10-15 FPS)
-        model = FastSAM('FastSAM-s.pt')
+        model = FastSAM('models/FastSAM-s.pt')
         print("✓ Modelo FastSAM-s cargado correctamente")
         print("  Capacidad: Segmenta CUALQUIER COSA (no limitado a clases)")
     except Exception as e:

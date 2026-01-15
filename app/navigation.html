@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathsAI - ¿A dónde vamos?</title>
+    <link rel="stylesheet" href="css/navigation.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Header con logo -->
+        <div class="header">
+            <img src="assets/logo.png" alt="PathsAI" class="logo">
+            <h2>¿A dónde quieres ir?</h2>
+        </div>
+
+        <!-- Botón del Asistente de Voz -->
+        <button class="search-btn" onclick="openAgent()">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2"/>
+                <path d="M19.4 15C19.1277 15.6171 18.7583 16.1807 18.3 16.68L21 19.39L19.39 21L16.68 18.3C16.1807 18.7583 15.6171 19.1277 15 19.4M5 12C5 15.87 8.13 19 12 19C13.5 19 14.9 18.5 16 17.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 5C8.13 5 5 8.13 5 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <div class="search-text">
+                <div class="search-title">Pregunta a tu asistente</div>
+                <div class="search-subtitle">Dime a dónde quieres ir</div>
+            </div>
+            <svg class="mic-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 1C10.34 1 9 2.34 9 4V12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12V4C15 2.34 13.66 1 12 1Z" stroke="currentColor" stroke-width="2"/>
+                <path d="M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10M12 19V23M8 23H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+
+        <!-- Botones de navegación -->
+        <div class="nav-grid">
+            <button class="nav-card" onclick="selectOption('favorites')">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
+                </svg>
+                <div class="card-title">Mis Favoritos</div>
+                <div class="card-desc">Lugares guardados</div>
+            </button>
+
+            <button class="nav-card" onclick="selectOption('places')">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
+                </svg>
+                <div class="card-title">Explorar</div>
+                <div class="card-desc">Restaurantes, hospitales...</div>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/navigation.js"></script>
+</body>
+</html>

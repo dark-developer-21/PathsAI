@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathsAI</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Logo -->
+        <div class="logo-area">
+            <img src="assets/logo.png" alt="PathsAI" class="logo">
+            <h1>PathsAI</h1>
+        </div>
+
+        <!-- Buttons -->
+        <div class="buttons-area">
+            <button class="option-btn hardware-btn" id="vision-kit" onclick="selectProduct('vision-kit')">
+                <div class="btn-icon">👓</div>
+                <div class="btn-text">Solo Cámara</div>
+            </button>
+
+            <button class="option-btn complete-btn" id="complete-journey" onclick="selectProduct('complete-journey')">
+                <div class="btn-icon">🗺️</div>
+                <div class="btn-text">Ruta Guiada</div>
+            </button>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

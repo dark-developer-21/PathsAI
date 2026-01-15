@@ -1,0 +1,239 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background: #F5F5F5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-container {
+    width: 100%;
+    max-width: 375px;
+    height: 100vh;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 24px;
+    position: relative;
+}
+
+/* Conversation Area */
+.conversation-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: 20px;
+    overflow-y: auto;
+}
+
+.message {
+    padding: 16px 20px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    max-width: 85%;
+    animation: fadeIn 0.3s ease;
+}
+
+.assistant-message {
+    background: #F0F0F0;
+    color: #2C2C2E;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    font-weight: 600;
+}
+
+.user-message {
+    background: #00D4FF;
+    color: #FFFFFF;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    font-weight: 600;
+}
+
+/* Voice Visualizer */
+.voice-visualizer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 40px 0;
+}
+
+.voice-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.2) 0%, rgba(0, 212, 255, 0.05) 70%, transparent 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.voice-circle::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    animation: ripple 2s ease-out infinite;
+}
+
+.voice-circle::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    animation: ripple 2s ease-out infinite 1s;
+}
+
+.inner-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00D4FF 0%, #00A8CC 100%);
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.5);
+    animation: glow 2s ease-in-out infinite;
+}
+
+.listening-text {
+    margin-top: 24px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #8E8E93;
+    animation: fadeInOut 2s ease-in-out infinite;
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding-bottom: 20px;
+}
+
+.control-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    background: #F0F0F0;
+    color: #2C2C2E;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.control-btn svg {
+    width: 28px;
+    height: 28px;
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.close-btn {
+    background: #FF9500;
+    color: #FFFFFF;
+}
+
+.close-btn:hover {
+    background: #E68600;
+}
+
+.mic-btn {
+    width: 80px;
+    height: 80px;
+}
+
+.mic-btn.active {
+    background: #00D4FF;
+    color: #FFFFFF;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+}
+
+.mic-btn.active svg {
+    width: 32px;
+    height: 32px;
+}
+
+.mic-btn:hover {
+    background: #00B8E6;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 40px rgba(0, 212, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 60px rgba(0, 212, 255, 0.8);
+    }
+}
+
+@keyframes fadeInOut {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (min-width: 376px) {
+    .mobile-container {
+        border-radius: 40px;
+        height: 812px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+}

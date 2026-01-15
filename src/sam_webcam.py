@@ -51,7 +51,7 @@ def main():
         conf=0.25,  # Umbral de confianza
         task="segment",
         mode="predict",
-        model="sam3.pt",
+        model="models/sam3.pt",
         half=True,  # Usar FP16 para inferencia mas rapida
         save=False,
         verbose=False
@@ -61,7 +61,7 @@ def main():
         predictor = SAM3SemanticPredictor(overrides=overrides)
     except Exception as e:
         print(f"\nError: No se pudo cargar el modelo SAM 3")
-        print(f"Asegurate de tener el archivo 'sam3.pt' descargado")
+        print(f"Asegurate de tener el archivo 'models/sam3.pt' descargado")
         print(f"Descargalo desde: https://huggingface.co/facebook/sam3")
         print(f"\nError tecnico: {e}")
         return

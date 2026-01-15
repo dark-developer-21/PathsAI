@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PathsAI - Navegación Activa</title>
+    <link rel="stylesheet" href="css/map-navigation.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="mobile-container">
+        <!-- Navigation Header -->
+        <div class="nav-header">
+            <div class="instruction-box">
+                <div class="distance">200 m</div>
+                <div class="instruction">Continúa recto</div>
+            </div>
+        </div>
+
+        <!-- Map Area -->
+        <div class="map-container">
+            <!-- Simulated map background -->
+            <div class="map-grid"></div>
+            
+            <!-- Route line -->
+            <div class="route-line"></div>
+            
+            <!-- User position marker -->
+            <div class="user-marker">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L15 8L21 9L16 14L18 21L12 17L6 21L8 14L3 9L9 8L12 2Z" fill="currentColor"/>
+                </svg>
+            </div>
+
+            <!-- Destination marker -->
+            <div class="destination-marker">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="currentColor"/>
+                </svg>
+            </div>
+
+            <!-- Hazard alerts -->
+            <div class="hazard-marker pothole" style="top: 35%; left: 55%;">
+                <div class="hazard-icon">⚠️</div>
+                <div class="hazard-label">Bache</div>
+            </div>
+
+            <div class="hazard-marker obstacle" style="top: 50%; left: 45%;">
+                <div class="hazard-icon">🚧</div>
+                <div class="hazard-label">Obstáculo</div>
+            </div>
+
+            <div class="hazard-marker wet" style="top: 25%; left: 60%;">
+                <div class="hazard-icon">💧</div>
+                <div class="hazard-label">Piso mojado</div>
+            </div>
+        </div>
+
+        <!-- Bottom Info Panel -->
+        <div class="info-panel">
+            <div class="eta-info">
+                <div class="eta-item">
+                    <div class="eta-label">Llegada</div>
+                    <div class="eta-value">12:45</div>
+                </div>
+                <div class="eta-item">
+                    <div class="eta-label">Distancia</div>
+                    <div class="eta-value">850 m</div>
+                </div>
+                <div class="eta-item">
+                    <div class="eta-label">Tiempo</div>
+                    <div class="eta-value">11 min</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert notification -->
+        <div class="alert-notification" id="alertNotification">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-text">
+                <div class="alert-title">¡Precaución!</div>
+                <div class="alert-desc">Bache reportado en 50 metros</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="map-navigation.js"></script>
+</body>
+</html>
